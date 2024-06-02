@@ -1,4 +1,6 @@
 #cloud-config
+timezone: Europe/Berlin
+
 apt_update: true
 apt_upgrade: false
 packages:
@@ -10,7 +12,6 @@ packages:
 - lsb-release
 - fail2ban
 - python3-systemd
-timezone: Europe/Berlin
 
 write_files:
 - content: |
