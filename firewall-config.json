@@ -1,0 +1,26 @@
+[
+  {
+    "description":"ssh",
+    "destination_ips":[],
+    "direction":"in",
+    "port":"22",
+    "protocol":"tcp",
+    "source_ips":["0.0.0.0/0","::/0"]
+  },
+  {
+    "description":"web",
+    "destination_ips":[],
+    "direction":"in",
+    "port":"80",
+    "protocol":"tcp",
+    "source_ips":["0.0.0.0/0","::/0"]
+  },
+  {
+    "description":"websecure",
+    "destination_ips":[],
+    "direction":"in",
+    "port":"443",
+    "protocol":"tcp",
+    "source_ips":["0.0.0.0/0","::/0"]
+  }
+]

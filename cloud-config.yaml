@@ -1,0 +1,73 @@
+#cloud-config
+apt_update: true
+apt_upgrade: false
+packages:
+- apparmor
+- binutils
+- ca-certificates
+- curl
+- gnupg
+- lsb-release
+- fail2ban
+- python3-systemd
+timezone: Europe/Berlin
+
+write_files:
+- content: |
+    [DEFAULT]
+    # Debian 12 has no log files, just journalctl
+    backend = systemd
+    # "bantime" is the number of seconds that a host is banned.
+    bantime  = 1d
+    # "maxretry" is the number of failures before a host get banned.
+    maxretry = 2
+    # A host is banned if it has generated "maxretry" during the last "findtime"
+    findtime  = 1h
+    [sshd]
+    enabled = true
+  path: /etc/fail2ban/jail.local
+- content: |
+    {
+      "ipv6": true,
+      "fixed-cidr-v6": "fd00:ffff::/80"
+    }
+  path: /etc/docker/daemon.json
+- content: |
+    [Unit]
+    Description=Docker Compose Demo Service
+    Requires=docker.service
+    After=docker.service
+
+    [Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    WorkingDirectory=/root/demo
+    ExecStart=/usr/bin/docker compose up -d
+    ExecStop=/usr/bin/docker compose down
+    TimeoutStartSec=0
+
+    [Install]
+    WantedBy=multi-user.target
+  path: /etc/systemd/system/demo-compose.service
+- content: |
+    services:
+      nginx:
+        restart: unless-stopped
+        image: nginx
+        ports:
+          - "80:80/tcp"
+          - "80:80/udp"
+          - "443:443/tcp"
+          - "443:443/udp"
+  path: /root/demo/docker-compose.yaml
+
+runcmd:
+- timedatectl set-timezone Europe/Berlin
+- mkdir -p /etc/apt/keyrings
+- curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+- chmod a+r /etc/apt/keyrings/docker.gpg
+- echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+- apt -y update
+- apt -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+- systemctl enable demo-compose
+- reboot
